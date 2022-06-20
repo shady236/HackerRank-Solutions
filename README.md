@@ -1,5 +1,5 @@
 # HackerRank Solutions
-Here is my solutions for some HackerRank problems, you can find here solutions for:
+Here is my solutions for some HackerRank problems in theses domains:
 * Algorithms
 * Data Structures
 * C 
