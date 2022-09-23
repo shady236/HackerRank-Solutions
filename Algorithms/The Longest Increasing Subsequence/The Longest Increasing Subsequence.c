@@ -12,73 +12,88 @@
 char* readline();
 char* ltrim(char*);
 char* rtrim(char*);
-char** split_string(char*);
 
 int parse_int(char*);
 
 
-int max(int x, int y)
+int findCeilIdx(int* arr, int size, int target)
 {
-    if(x > y)
-        return x;
-    return y;
+    int left  = 0;
+    int right = size - 1;
+    int ceilIdx;
+    
+    while(left <= right)
+    {
+        int mid = (left + right) >> 1;
+        
+        if(target == arr[mid])
+        {
+            ceilIdx = mid;
+            break;
+        }
+        else if(target < arr[mid])
+        {
+            ceilIdx = mid;
+            right = mid - 1;
+        }
+        else 
+        {
+            left = mid + 1;
+        }
+    }
+    
+    return ceilIdx;
 }
 
 
 /*
- * Complete the 'unboundedKnapsack' function below.
+ * Complete the 'longestIncreasingSubsequence' function below.
  *
  * The function is expected to return an INTEGER.
- * The function accepts following parameters:
- *  1. INTEGER k
- *  2. INTEGER_ARRAY arr
+ * The function accepts INTEGER_ARRAY arr as parameter.
  */
 
-int unboundedKnapsack(int k, int arr_count, int* arr)
+int longestIncreasingSubsequence(int arr_count, int* arr) 
 {
-    int dp[2001] = {0};
+    int smallestEndOfLIS[1000001];
+    int LIS = 0;
     
-    for(int kItr = 1; kItr <= k; kItr++)
+    smallestEndOfLIS[0] = INT32_MIN;
+    
+    for(int i = 0; i < arr_count; i++)
     {
-        for(int i = 0; i < arr_count; i++)
+        if(arr[i] > smallestEndOfLIS[LIS])
         {
-            if(arr[i] <= kItr)
-                dp[kItr] = max(dp[kItr], arr[i] + dp[kItr - arr[i]]);
+            LIS++;
+            smallestEndOfLIS[LIS] = arr[i];
+        }
+        else 
+        {
+            int ceilIdx = findCeilIdx(smallestEndOfLIS, LIS + 1, arr[i]);
+            smallestEndOfLIS[ceilIdx] = arr[i];
         }
     }
     
-    return dp[k];
+    return LIS;
 }
 
 int main()
 {
     FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
 
-    int t = parse_int(ltrim(rtrim(readline())));
-    
-    while (t--) {
+    int n = parse_int(ltrim(rtrim(readline())));
 
-        char** first_multiple_input = split_string(rtrim(readline()));
+    int* arr = malloc(n * sizeof(int));
 
-        int n = parse_int(*(first_multiple_input + 0));
+    for (int i = 0; i < n; i++) {
+        int arr_item = parse_int(ltrim(rtrim(readline())));
 
-        int k = parse_int(*(first_multiple_input + 1));
-
-        char** arr_temp = split_string(rtrim(readline()));
-
-        int* arr = malloc(n * sizeof(int));
-
-        for (int i = 0; i < n; i++) {
-            int arr_item = parse_int(*(arr_temp + i));
-
-            *(arr + i) = arr_item;
-        }
-
-        int result = unboundedKnapsack(k, n, arr);
-
-        fprintf(fptr, "%d\n", result);
-
+        *(arr + i) = arr_item;
     }
+
+    int result = longestIncreasingSubsequence(n, arr);
+
+    fprintf(fptr, "%d\n", result);
 
     fclose(fptr);
 
@@ -171,27 +186,6 @@ char* rtrim(char* str) {
     *(end + 1) = '\0';
 
     return str;
-}
-
-char** split_string(char* str) {
-    char** splits = NULL;
-    char* token = strtok(str, " ");
-
-    int spaces = 0;
-
-    while (token) {
-        splits = realloc(splits, sizeof(char*) * ++spaces);
-
-        if (!splits) {
-            return splits;
-        }
-
-        splits[spaces - 1] = token;
-
-        token = strtok(NULL, " ");
-    }
-
-    return splits;
 }
 
 int parse_int(char* str) {

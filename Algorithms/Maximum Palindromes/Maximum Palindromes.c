@@ -17,67 +17,130 @@ char** split_string(char*);
 int parse_int(char*);
 
 
-int max(int x, int y)
+#define  MOD       (1000000007)
+
+
+int prefixFreq[100001][26] = {0};
+int fact[100001] = {1};
+int factInverse[100001] = {1};
+
+int power(int n, int p)
 {
-    if(x > y)
-        return x;
-    return y;
+    if(p == 0)
+        return 1;
+    if(p == 1)
+        return n;
+    
+    int halfPower = p >> 1;
+    
+    unsigned long long res = power(n, halfPower);
+    res *= res;
+    res %= MOD;
+    
+    if(p % 2 != 0)
+        res *= n;
+    res %= MOD;
+    
+    return res;
 }
 
+/*
+ * Complete the 'initialize' function below.
+ *
+ * The function accepts STRING s as parameter.
+ */
+
+void initialize(char* s)
+{
+    // This function is called once before all queries.
+    
+    for(int i = 0; s[i]; i++)
+    {
+        if(i > 0)
+        {
+            for(int j = 0; j < 26; j++)
+                prefixFreq[i][j] = prefixFreq[i - 1][j];
+        }
+        
+        prefixFreq[i][s[i] - 'a']++;
+    }
+    
+    
+    fact[0] = 1;
+    for(long i = 1; i < 100001; i++)
+        fact[i] = (fact[i - 1] * i) % MOD;
+    
+    for(int i = 1; i < 100001; i++)
+        factInverse[i] = power(fact[i], MOD - 2);
+}
 
 /*
- * Complete the 'unboundedKnapsack' function below.
+ * Complete the 'answerQuery' function below.
  *
  * The function is expected to return an INTEGER.
  * The function accepts following parameters:
- *  1. INTEGER k
- *  2. INTEGER_ARRAY arr
+ *  1. INTEGER l
+ *  2. INTEGER r
  */
 
-int unboundedKnapsack(int k, int arr_count, int* arr)
+int answerQuery(int l, int r)
 {
-    int dp[2001] = {0};
+    // Return the answer for this query modulo 1000000007ULL.
     
-    for(int kItr = 1; kItr <= k; kItr++)
+    r--;
+    l--;
+    
+    int rangeFreq[26];
+    int maxPalindromHalfLen = 0;
+    int oddCnt = 0;
+    
+    for(int i = 0; i < 26; i++)
     {
-        for(int i = 0; i < arr_count; i++)
-        {
-            if(arr[i] <= kItr)
-                dp[kItr] = max(dp[kItr], arr[i] + dp[kItr - arr[i]]);
-        }
+        rangeFreq[i] = prefixFreq[r][i];
+        if(l > 0)
+            rangeFreq[i] -= prefixFreq[l - 1][i];
+        
+        maxPalindromHalfLen += rangeFreq[i]>>1;
+        
+        if(rangeFreq[i] & 1)
+            oddCnt++;
     }
     
-    return dp[k];
+    unsigned long long res  = fact[maxPalindromHalfLen];
+    if(oddCnt)
+        res *= oddCnt;
+    res  %= MOD;
+    
+    for(int i = 0; i < 26; i++)
+    {
+        if(rangeFreq[i] > 1)
+            res *= factInverse[rangeFreq[i]>>1];
+        res  %= MOD;
+    }
+    
+    return res;
 }
 
 int main()
 {
     FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
 
-    int t = parse_int(ltrim(rtrim(readline())));
-    
-    while (t--) {
+    char* s = readline();
 
+    initialize(s);
+
+    int q = parse_int(ltrim(rtrim(readline())));
+
+    for (int q_itr = 0; q_itr < q; q_itr++) {
         char** first_multiple_input = split_string(rtrim(readline()));
 
-        int n = parse_int(*(first_multiple_input + 0));
+        int l = parse_int(*(first_multiple_input + 0));
 
-        int k = parse_int(*(first_multiple_input + 1));
+        int r = parse_int(*(first_multiple_input + 1));
 
-        char** arr_temp = split_string(rtrim(readline()));
-
-        int* arr = malloc(n * sizeof(int));
-
-        for (int i = 0; i < n; i++) {
-            int arr_item = parse_int(*(arr_temp + i));
-
-            *(arr + i) = arr_item;
-        }
-
-        int result = unboundedKnapsack(k, n, arr);
+        int result = answerQuery(l, r);
 
         fprintf(fptr, "%d\n", result);
-
     }
 
     fclose(fptr);

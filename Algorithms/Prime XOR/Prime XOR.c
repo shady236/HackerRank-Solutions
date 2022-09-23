@@ -17,67 +17,119 @@ char** split_string(char*);
 int parse_int(char*);
 
 
-int max(int x, int y)
+#define  MIN_NUM    (3500)
+#define  MAX_NUM    (4500)
+#define  MAX_XOR    (1<<13)
+#define  MOD        (1000000007)
+
+
+char isPrimeFun(int n)
 {
-    if(x > y)
-        return x;
-    return y;
+    if(n <= 1)
+        return 0;
+    if(n == 2)
+        return 1;
+    if(n % 2 == 0)
+        return 0;
+    
+    for(int i = 3; i * i <= n; i += 2)
+    {
+        if(n % i == 0)
+            return 0;
+    }
+    
+    return 1;
 }
 
 
+char isPrime[MAX_XOR + 1];
+void primesInit(void)
+{
+    for(int i = 0; i <= MAX_XOR; i++)
+        isPrime[i] = isPrimeFun(i);
+}
+
 /*
- * Complete the 'unboundedKnapsack' function below.
+ * Complete the 'primeXor' function below.
  *
  * The function is expected to return an INTEGER.
- * The function accepts following parameters:
- *  1. INTEGER k
- *  2. INTEGER_ARRAY arr
+ * The function accepts INTEGER_ARRAY a as parameter.
  */
 
-int unboundedKnapsack(int k, int arr_count, int* arr)
+int primeXor(int a_count, int* a) 
 {
-    int dp[2001] = {0};
+    int freq[MAX_NUM + 1] = {0};
+    for(int i = 0; i < a_count; i++)
+        freq[a[i]]++;
     
-    for(int kItr = 1; kItr <= k; kItr++)
+    int xorFreq[MAX_XOR + 1] = {0};
+    int prevXorFreq[MAX_XOR + 1] = {0};
+    
+    for(int i = MIN_NUM; i <= MAX_NUM; i++)
     {
-        for(int i = 0; i < arr_count; i++)
+        long evenCnt = (freq[i]>>1);
+        if(evenCnt)
         {
-            if(arr[i] <= kItr)
-                dp[kItr] = max(dp[kItr], arr[i] + dp[kItr - arr[i]]);
+            for(int j = 0; j <= MAX_XOR; j++)
+            {
+                xorFreq[j] = (xorFreq[j] * (1ULL + evenCnt)) % MOD;
+            }
+            
+            xorFreq[0] = (xorFreq[0] + evenCnt) % MOD;
         }
+        
+        long oddCnt = (freq[i] + 1) >> 1;
+        if(oddCnt)
+        {
+            for(int j = 0; j < MAX_XOR; j++)
+            {
+                xorFreq[j ^ i] = (xorFreq[j ^ i] + prevXorFreq[j] * oddCnt) % MOD;
+            }
+            
+            xorFreq[i] = (xorFreq[i] + oddCnt) % MOD;
+        }
+        
+        
+        for(int j = 0; j <= MAX_XOR; j++)
+            prevXorFreq[j] = xorFreq[j];
     }
     
-    return dp[k];
+    
+    long primeCnt = 0;
+    
+    for(int j = 0; j <= MAX_XOR; j++)
+    {
+        if(isPrime[j])
+            primeCnt = (primeCnt + xorFreq[j]) % MOD;
+    }
+    
+    return primeCnt;
 }
 
 int main()
 {
+    primesInit();
+    
     FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
 
-    int t = parse_int(ltrim(rtrim(readline())));
-    
-    while (t--) {
+    int q = parse_int(ltrim(rtrim(readline())));
 
-        char** first_multiple_input = split_string(rtrim(readline()));
+    for (int q_itr = 0; q_itr < q; q_itr++) {
+        int n = parse_int(ltrim(rtrim(readline())));
 
-        int n = parse_int(*(first_multiple_input + 0));
+        char** a_temp = split_string(rtrim(readline()));
 
-        int k = parse_int(*(first_multiple_input + 1));
-
-        char** arr_temp = split_string(rtrim(readline()));
-
-        int* arr = malloc(n * sizeof(int));
+        int* a = malloc(n * sizeof(int));
 
         for (int i = 0; i < n; i++) {
-            int arr_item = parse_int(*(arr_temp + i));
+            int a_item = parse_int(*(a_temp + i));
 
-            *(arr + i) = arr_item;
+            *(a + i) = a_item;
         }
 
-        int result = unboundedKnapsack(k, n, arr);
+        int result = primeXor(n, a);
 
         fprintf(fptr, "%d\n", result);
-
     }
 
     fclose(fptr);

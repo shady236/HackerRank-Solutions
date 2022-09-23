@@ -12,42 +12,30 @@
 char* readline();
 char* ltrim(char*);
 char* rtrim(char*);
-char** split_string(char*);
 
 int parse_int(char*);
 
 
-int max(int x, int y)
-{
-    if(x > y)
-        return x;
-    return y;
-}
-
-
 /*
- * Complete the 'unboundedKnapsack' function below.
+ * Complete the 'stringReduction' function below.
  *
  * The function is expected to return an INTEGER.
- * The function accepts following parameters:
- *  1. INTEGER k
- *  2. INTEGER_ARRAY arr
+ * The function accepts STRING s as parameter.
  */
 
-int unboundedKnapsack(int k, int arr_count, int* arr)
+int stringReduction(char* s)
 {
-    int dp[2001] = {0};
+    int freq[3] = {0};
     
-    for(int kItr = 1; kItr <= k; kItr++)
-    {
-        for(int i = 0; i < arr_count; i++)
-        {
-            if(arr[i] <= kItr)
-                dp[kItr] = max(dp[kItr], arr[i] + dp[kItr - arr[i]]);
-        }
-    }
+    for(int i = 0; s[i]; i++)
+        freq[s[i] - 'a']++;
     
-    return dp[k];
+    int len = strlen(s);
+    
+    if(freq[0] == len || freq[1] == len || freq[2] == len)
+        return len;
+    
+    return 1 + (freq[0] % 2 == freq[1] % 2 && freq[1] % 2 == freq[2] % 2);
 }
 
 int main()
@@ -55,29 +43,13 @@ int main()
     FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
 
     int t = parse_int(ltrim(rtrim(readline())));
-    
-    while (t--) {
 
-        char** first_multiple_input = split_string(rtrim(readline()));
+    for (int t_itr = 0; t_itr < t; t_itr++) {
+        char* s = readline();
 
-        int n = parse_int(*(first_multiple_input + 0));
-
-        int k = parse_int(*(first_multiple_input + 1));
-
-        char** arr_temp = split_string(rtrim(readline()));
-
-        int* arr = malloc(n * sizeof(int));
-
-        for (int i = 0; i < n; i++) {
-            int arr_item = parse_int(*(arr_temp + i));
-
-            *(arr + i) = arr_item;
-        }
-
-        int result = unboundedKnapsack(k, n, arr);
+        int result = stringReduction(s);
 
         fprintf(fptr, "%d\n", result);
-
     }
 
     fclose(fptr);
@@ -171,27 +143,6 @@ char* rtrim(char* str) {
     *(end + 1) = '\0';
 
     return str;
-}
-
-char** split_string(char* str) {
-    char** splits = NULL;
-    char* token = strtok(str, " ");
-
-    int spaces = 0;
-
-    while (token) {
-        splits = realloc(splits, sizeof(char*) * ++spaces);
-
-        if (!splits) {
-            return splits;
-        }
-
-        splits[spaces - 1] = token;
-
-        token = strtok(NULL, " ");
-    }
-
-    return splits;
 }
 
 int parse_int(char* str) {

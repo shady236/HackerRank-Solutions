@@ -17,67 +17,81 @@ char** split_string(char*);
 int parse_int(char*);
 
 
-int max(int x, int y)
+int sgn(int nodesCnt)
 {
-    if(x > y)
-        return x;
-    return y;
+    if(nodesCnt == 0 || nodesCnt == 2)
+        return 0;
+    else if(nodesCnt % 2 == 0)
+        return 2;
+    else 
+        return 1;
 }
 
 
 /*
- * Complete the 'unboundedKnapsack' function below.
+ * Complete the 'bobAndBen' function below.
  *
- * The function is expected to return an INTEGER.
- * The function accepts following parameters:
- *  1. INTEGER k
- *  2. INTEGER_ARRAY arr
+ * The function is expected to return a STRING.
+ * The function accepts 2D_INTEGER_ARRAY trees as parameter.
  */
 
-int unboundedKnapsack(int k, int arr_count, int* arr)
+/*
+ * To return the string from the function, you should either do static allocation or dynamic allocation
+ *
+ * For example,
+ * char* return_string_using_static_allocation() {
+ *     static char s[] = "static allocation of string";
+ *
+ *     return s;
+ * }
+ *
+ * char* return_string_using_dynamic_allocation() {
+ *     char* s = malloc(100 * sizeof(char));
+ *
+ *     s = "dynamic allocation of string";
+ *
+ *     return s;
+ * }
+ *
+ */
+char* bobAndBen(int trees_rows, int trees_columns, int** trees) 
 {
-    int dp[2001] = {0};
+    int xor = 0;
     
-    for(int kItr = 1; kItr <= k; kItr++)
-    {
-        for(int i = 0; i < arr_count; i++)
-        {
-            if(arr[i] <= kItr)
-                dp[kItr] = max(dp[kItr], arr[i] + dp[kItr - arr[i]]);
-        }
-    }
+    for(int i = 0; i < trees_rows; i++)
+        xor ^= sgn(trees[i][0]);
     
-    return dp[k];
+    if(xor)
+        return "BOB";
+    return "BEN";
 }
 
 int main()
 {
     FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
 
-    int t = parse_int(ltrim(rtrim(readline())));
-    
-    while (t--) {
+    int g = parse_int(ltrim(rtrim(readline())));
 
-        char** first_multiple_input = split_string(rtrim(readline()));
+    for (int g_itr = 0; g_itr < g; g_itr++) {
+        int n = parse_int(ltrim(rtrim(readline())));
 
-        int n = parse_int(*(first_multiple_input + 0));
-
-        int k = parse_int(*(first_multiple_input + 1));
-
-        char** arr_temp = split_string(rtrim(readline()));
-
-        int* arr = malloc(n * sizeof(int));
+        int** trees = malloc(n * sizeof(int*));
 
         for (int i = 0; i < n; i++) {
-            int arr_item = parse_int(*(arr_temp + i));
+            *(trees + i) = malloc(2 * (sizeof(int)));
 
-            *(arr + i) = arr_item;
+            char** trees_item_temp = split_string(rtrim(readline()));
+
+            for (int j = 0; j < 2; j++) {
+                int trees_item = parse_int(*(trees_item_temp + j));
+
+                *(*(trees + i) + j) = trees_item;
+            }
         }
 
-        int result = unboundedKnapsack(k, n, arr);
+        char* result = bobAndBen(n, 2, trees);
 
-        fprintf(fptr, "%d\n", result);
-
+        fprintf(fptr, "%s\n", result);
     }
 
     fclose(fptr);

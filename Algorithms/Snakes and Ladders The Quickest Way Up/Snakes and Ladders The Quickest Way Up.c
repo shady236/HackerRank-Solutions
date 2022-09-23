@@ -17,37 +17,79 @@ char** split_string(char*);
 int parse_int(char*);
 
 
-int max(int x, int y)
+int min(int a, int b)
 {
-    if(x > y)
-        return x;
-    return y;
+    if(a > b)
+        return b;
+    return a;
+}
+
+
+int minSteps(int* des, int strt, int* dp, char* isVisited)
+{
+    if(dp[strt] != -2)
+        return dp[strt];
+    
+    if(strt >= 99)
+        return 0;
+    
+    if(strt + 6 >= 99)
+        return 1;
+    
+    isVisited[strt] = 1;
+    
+    int res = -1;
+    for(int step = 1; step <= 6; step++)
+    {
+        int nextStrt = des[strt + step];
+        if(isVisited[nextStrt])
+            continue;
+        
+        int next = minSteps(des, nextStrt, dp, isVisited);
+        
+        if(next != -1)
+        {
+            if(res == -1)
+                res = next + 1;
+            else 
+                res = min(res, next + 1);
+        }
+    }
+    
+    isVisited[strt] = 0;
+    dp[strt] = res;
+    return res;
 }
 
 
 /*
- * Complete the 'unboundedKnapsack' function below.
+ * Complete the 'quickestWayUp' function below.
  *
  * The function is expected to return an INTEGER.
  * The function accepts following parameters:
- *  1. INTEGER k
- *  2. INTEGER_ARRAY arr
+ *  1. 2D_INTEGER_ARRAY ladders
+ *  2. 2D_INTEGER_ARRAY snakes
  */
 
-int unboundedKnapsack(int k, int arr_count, int* arr)
+int quickestWayUp(int ladders_rows, int ladders_columns, int** ladders, int snakes_rows, int snakes_columns, int** snakes) 
 {
-    int dp[2001] = {0};
+    int des[100];
+    for(int i = 0; i < 100; i++)
+        des[i] = i;
     
-    for(int kItr = 1; kItr <= k; kItr++)
-    {
-        for(int i = 0; i < arr_count; i++)
-        {
-            if(arr[i] <= kItr)
-                dp[kItr] = max(dp[kItr], arr[i] + dp[kItr - arr[i]]);
-        }
-    }
+    for(int i = 0; i < ladders_rows; i++)
+        des[ladders[i][0] - 1] = ladders[i][1] - 1;
     
-    return dp[k];
+    for(int i = 0; i < snakes_rows; i++)
+        des[snakes[i][0] - 1] = snakes[i][1] - 1;
+    
+    int dp[100];
+    for(int i = 0; i < 100; i++)
+        dp[i] = -2;
+    
+    char isVisited[100] = {0};
+    
+    return minSteps(des, 0, dp, isVisited);
 }
 
 int main()
@@ -55,29 +97,43 @@ int main()
     FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
 
     int t = parse_int(ltrim(rtrim(readline())));
-    
-    while (t--) {
 
-        char** first_multiple_input = split_string(rtrim(readline()));
+    for (int t_itr = 0; t_itr < t; t_itr++) {
+        int n = parse_int(ltrim(rtrim(readline())));
 
-        int n = parse_int(*(first_multiple_input + 0));
-
-        int k = parse_int(*(first_multiple_input + 1));
-
-        char** arr_temp = split_string(rtrim(readline()));
-
-        int* arr = malloc(n * sizeof(int));
+        int** ladders = malloc(n * sizeof(int*));
 
         for (int i = 0; i < n; i++) {
-            int arr_item = parse_int(*(arr_temp + i));
+            *(ladders + i) = malloc(2 * (sizeof(int)));
 
-            *(arr + i) = arr_item;
+            char** ladders_item_temp = split_string(rtrim(readline()));
+
+            for (int j = 0; j < 2; j++) {
+                int ladders_item = parse_int(*(ladders_item_temp + j));
+
+                *(*(ladders + i) + j) = ladders_item;
+            }
         }
 
-        int result = unboundedKnapsack(k, n, arr);
+        int m = parse_int(ltrim(rtrim(readline())));
+
+        int** snakes = malloc(m * sizeof(int*));
+
+        for (int i = 0; i < m; i++) {
+            *(snakes + i) = malloc(2 * (sizeof(int)));
+
+            char** snakes_item_temp = split_string(rtrim(readline()));
+
+            for (int j = 0; j < 2; j++) {
+                int snakes_item = parse_int(*(snakes_item_temp + j));
+
+                *(*(snakes + i) + j) = snakes_item;
+            }
+        }
+
+        int result = quickestWayUp(n, 2, ladders, m, 2, snakes);
 
         fprintf(fptr, "%d\n", result);
-
     }
 
     fclose(fptr);
